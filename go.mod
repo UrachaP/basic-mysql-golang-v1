@@ -2,7 +2,7 @@ module basic-golang
 
 go 1.19
 
-// go mod init <name>
+// go mod init basic-golang
 
 require (
 	github.com/go-sql-driver/mysql v1.7.0 // indirect

@@ -39,6 +39,7 @@ func main() {
 	e.Start(":1325")
 }
 
+// BookingHistory struct for store data from database
 type BookingHistory struct {
 	ID            int        `json:"id"`
 	FirstName     string     `json:"first_name"`
@@ -49,17 +50,22 @@ type BookingHistory struct {
 	SumGrade      string     `json:"sum_grade"`
 }
 
+// TableName reference struct BookingHistory to table bookings in database
 func (BookingHistory) TableName() string {
 	return "bookings"
 }
 
+// use gorm
 func getBooking(c echo.Context) error {
-	var bookingHistorys []BookingHistory
-	DB.
-		Select([]string{
-			"bookings.id", "first_name", "last_name",
-			"start_date", "end_date", "maximum_person",
-			`CASE WHEN sum_grade = 'A'THEN 'ดีมาก' 
+	var bookingHistories []BookingHistory
+	DB.Select([]string{
+		"bookings.id",
+		"first_name",
+		"last_name",
+		"start_date",
+		"end_date",
+		"maximum_person",
+		`CASE WHEN sum_grade = 'A'THEN 'ดีมาก' 
 				WHEN sum_grade = 'B' THEN 'ดี' 
 				WHEN sum_grade = 'C' THEN 'พอใช้' 
 				WHEN sum_grade = 'D' THEN 'ปรับปรุง' 
@@ -67,36 +73,42 @@ func getBooking(c echo.Context) error {
 			END AS sum_grade`}).
 		Joins("LEFT JOIN users ON users.id = bookings.users_id").
 		Joins("LEFT JOIN rooms ON rooms.id = bookings.rooms_id").
-		Find(&bookingHistorys)
-	return c.JSON(200, bookingHistorys)
+		Find(&bookingHistories)
+	return c.JSON(200, bookingHistories)
 }
 
-// handlers
+// request by path param
 func getUser(c echo.Context) error {
 	id := c.Param("id")
 	return c.String(200, id)
 }
 
+// request by query param
 type TeamMember struct {
-	Team   string `query:"team" json:"team"`
-	Member int    `query:"member" json:"member"`
+	Team   string `query:"team"`
+	Member int    `query:"member"`
 }
 
+// request by query param
 func getShow(c echo.Context) error {
 	//t := c.QueryParam("team")
 	//m := c.QueryParam("member")
 	var tm TeamMember
 
-	c.Bind(&tm)
-
+	err := c.Bind(&tm)
+	if err != nil {
+		return err
+	}
 	return c.JSON(200, tm)
 }
 
+// request by json
 type Users struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
 }
 
+// request by json
 func getUser2(c echo.Context) error {
 	var u Users
 	//u := Users{}
@@ -108,6 +120,7 @@ func getUser2(c echo.Context) error {
 	return c.JSON(200, u)
 }
 
+// request by form-data
 func save(c echo.Context) error {
 	//n := c.FormValue("name")
 	image, err := c.FormFile("file")
@@ -127,6 +140,7 @@ func save(c echo.Context) error {
 	return c.JSON(200, image)
 }
 
+// middleware
 func testMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		key := c.Request().Header.Get("key")
